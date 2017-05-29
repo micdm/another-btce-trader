@@ -29,6 +29,19 @@ internal class LocalPriceProvider @Inject constructor(private val gson: Gson): P
                 }
                 source.onComplete()
             }
+            .distinctUntilChanged()
+            .doOnNext {
+                println("New price is $it")
+            }
             .subscribe(prices)
+//        Observable.just(
+//            BigDecimal("1000"),
+//            BigDecimal("900"),
+//            BigDecimal("1010"),
+//            BigDecimal("1050"),
+//            BigDecimal("1060")
+//        )
+
+//            .subscribe(prices)
     }
 }

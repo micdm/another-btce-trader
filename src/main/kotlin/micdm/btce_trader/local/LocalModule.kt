@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.Provides
 import micdm.btce_trader.*
 import micdm.btce_trader.model.Currency
+import java.math.BigDecimal
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -26,12 +27,12 @@ class LocalModule {
     @Singleton
     @Provides
     @Named("first")
-    fun provideFirstCurrencyBalanceBuffer(@Named("first") currency: Currency): LocalBalanceBuffer = LocalBalanceBuffer(currency)
+    fun provideFirstCurrencyBalanceBuffer(@Named("first") currency: Currency): LocalBalanceBuffer = LocalBalanceBuffer(currency, BigDecimal.ZERO)
 
     @Singleton
     @Provides
     @Named("second")
-    fun provideSecondCurrencyBalanceBuffer(@Named("second") currency: Currency): LocalBalanceBuffer = LocalBalanceBuffer(currency)
+    fun provideSecondCurrencyBalanceBuffer(@Named("second") currency: Currency): LocalBalanceBuffer = LocalBalanceBuffer(currency, BigDecimal("400"))
 }
 
 @Module

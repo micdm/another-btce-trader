@@ -19,14 +19,14 @@ internal class LocalActiveOrdersBuffer @Inject constructor() {
     }
 
     fun add(order: Order) {
-        println("Adding order $order as active")
+        println("Creating order $order")
         val orders = ArrayList(this.orders.value)
         orders.add(order)
         this.orders.onNext(orders)
     }
 
     fun remove(id: String) {
-        println("Removing order $id from active")
+        println("Removing order $id")
         val orders = ArrayList(this.orders.value)
         orders.removeIf{ it.id == id }
         this.orders.onNext(orders)

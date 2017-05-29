@@ -5,9 +5,10 @@ import io.reactivex.subjects.BehaviorSubject
 import micdm.btce_trader.model.Currency
 import java.math.BigDecimal
 
-class LocalBalanceBuffer constructor(private val currency: Currency) {
+class LocalBalanceBuffer constructor(private val currency: Currency,
+                                     initial: BigDecimal) {
 
-    private val balance = BehaviorSubject.createDefault(BigDecimal.ZERO)
+    private val balance = BehaviorSubject.createDefault(initial)
 
     fun get(): Observable<BigDecimal> = balance
 

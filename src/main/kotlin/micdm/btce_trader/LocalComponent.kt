@@ -9,6 +9,7 @@ import javax.inject.Singleton
 @Component(modules = arrayOf(CommonModule::class, LocalModule::class, UtilModule::class))
 interface LocalComponent {
 
+    fun getActiveOrdersProvider(): ActiveOrdersProvider
     @Named("first") fun getFirstCurrencyBalanceProvider(): BalanceProvider
     @Named("second") fun getSecondCurrencyBalanceProvider(): BalanceProvider
     fun getOrderHandler(): OrderHandler
