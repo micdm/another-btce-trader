@@ -48,10 +48,6 @@ abstract class ImplModule {
 
     @Singleton
     @Binds
-    internal abstract fun provideOrderMaker(orderMaker: LocalOrderMaker): OrderMaker
-
-    @Singleton
-    @Binds
     internal abstract fun providePriceProvider(priceProvider: LocalPriceProvider): PriceProvider
 
     @Singleton

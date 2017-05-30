@@ -6,7 +6,7 @@ import micdm.btce_trader.model.OrderType
 import java.math.BigDecimal
 
 fun main(args: Array<String>) {
-    val component = DaggerLocalComponent.builder().build()
+    val component = DaggerRemoteComponent.builder().build()
     Observable
         .combineLatest(
             component.getFirstCurrencyBalanceProvider().getBalance(),
@@ -33,4 +33,5 @@ fun main(args: Array<String>) {
         }
     component.getOrderHandler().start()
     component.getPriceProvider().start()
+    component.getMainThreadExecutor().run()
 }

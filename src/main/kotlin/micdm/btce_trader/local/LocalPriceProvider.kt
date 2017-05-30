@@ -8,10 +8,11 @@ import micdm.btce_trader.PriceProvider
 import java.io.File
 import java.math.BigDecimal
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalPriceProvider @Inject constructor(private val gson: Gson): PriceProvider {
+internal class LocalPriceProvider @Inject constructor(@Named("common") private val gson: Gson): PriceProvider {
 
     data class Pairs(val btc_usd: Pair)
 

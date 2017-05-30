@@ -1,5 +1,7 @@
 package micdm.btce_trader
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import micdm.btce_trader.model.Currency
@@ -25,4 +27,9 @@ class CommonModule {
     fun provideCurrencyPair(@Named("first") first: Currency, @Named("second") second: Currency): CurrencyPair {
         return CurrencyPair(first, second, 3)
     }
+
+    @Provides
+    @Singleton
+    @Named("common")
+    fun provideGson(): Gson = GsonBuilder().create()
 }
