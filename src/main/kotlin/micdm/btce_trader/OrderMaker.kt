@@ -63,7 +63,7 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
                 println("No trades made yet, creating a new one")
                 return getDataToCreateFirstOrder(price, secondCurrencyBalance)
             } else {
-                val (data) = trades.last()
+                val data = trades.last().data
                 if (data.type == OrderType.BUY) {
                     println("Creating SELL order")
                     return getDataToCreateSellOrder(data.price, data.amount, firstCurrencyBalance)

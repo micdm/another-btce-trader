@@ -14,7 +14,7 @@ internal class RemoteBalanceProvider constructor(private val currency: Currency,
                                                  private val secondCurrency: Currency,
                                                  private val tradeApiConnector: TradeApiConnector): BalanceProvider {
 
-    private val POLL_INTERVAL = Duration.ofSeconds(5)
+    private val POLL_INTERVAL = Duration.ofSeconds(300)
 
     private val balance: Subject<BigDecimal> = PublishSubject.create()
 

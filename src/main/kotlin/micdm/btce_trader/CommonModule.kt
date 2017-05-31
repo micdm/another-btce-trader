@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
+import io.reactivex.Scheduler
+import io.reactivex.schedulers.Schedulers
 import micdm.btce_trader.model.Currency
 import micdm.btce_trader.model.CurrencyPair
 import javax.inject.Named
@@ -32,4 +34,9 @@ class CommonModule {
     @Singleton
     @Named("common")
     fun provideGson(): Gson = GsonBuilder().create()
+
+    @Provides
+    @Singleton
+    @Named("single")
+    fun provideSingleScheduler(): Scheduler = Schedulers.single()
 }

@@ -50,7 +50,7 @@ internal class LocalOrderHandler @Inject constructor(private val currencyPair: C
             .switchMap { (id, data) ->
                 priceProvider.getPrices()
                     .filter { price -> (data.type == OrderType.BUY && data.price >= price) || (data.type == OrderType.SELL && data.price <= price) }
-                    .map { Trade(OrderData(data.type, data.price, (data.amount * PRIZE_PART).round(PRIZE_DOWN_ROUNDING)), ZonedDateTime.now()) }
+                    .map { Trade(UUID.randomUUID().toString(), id, OrderData(data.type, data.price, (data.amount * PRIZE_PART).round(PRIZE_DOWN_ROUNDING)), ZonedDateTime.now()) }
                     .doOnNext { trade ->
                         println("Removing order $id: complete")
                         activeOrdersBuffer.remove(id)

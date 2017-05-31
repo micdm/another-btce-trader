@@ -16,5 +16,6 @@ interface RemoteComponent {
     fun getOrderHandler(): OrderHandler
     fun getOrderMaker(): OrderMaker
     fun getPriceProvider(): PriceProvider
+    fun getTradeHistoryProvider(): TradeHistoryProvider
     fun getMainThreadExecutor(): MainThreadExecutor
 }

@@ -1,5 +1,6 @@
 package micdm.btce_trader.remote
 
+import com.google.gson.FieldNamingPolicy
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
@@ -34,12 +35,31 @@ class RemoteModule {
     @Named("trade")
     fun provideTradeGson(): Gson {
         return GsonBuilder()
+            .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .registerTypeAdapter(TradeApiConnector.GetInfoResult::class.java, JsonDeserializer<TradeApiConnector.GetInfoResult> { json, typeOfT, context ->
                 val root = json.getAsJsonObject()
                 val success = root.getAsJsonPrimitive("success").getAsInt()
                 when (success) {
                     0 -> TradeApiConnector.GetInfoResult(Optional.empty(), Optional.of(root.getAsJsonPrimitive("error").getAsString()))
                     1 -> TradeApiConnector.GetInfoResult(Optional.of(context.deserialize(root.getAsJsonObject("return"), TradeApiConnector.Info::class.java)), Optional.empty())
+                    else -> throw IllegalStateException("unknown success value $success")
+                }
+            })
+            .registerTypeAdapter(TradeApiConnector.GetActiveOrdersResult::class.java, JsonDeserializer<TradeApiConnector.GetActiveOrdersResult> { json, typeOfT, context ->
+                val root = json.getAsJsonObject()
+                val success = root.getAsJsonPrimitive("success").getAsInt()
+                when (success) {
+                    0 -> TradeApiConnector.GetActiveOrdersResult(Optional.empty(), Optional.of(root.getAsJsonPrimitive("error").getAsString()))
+                    1 -> TradeApiConnector.GetActiveOrdersResult(Optional.of(context.deserialize(root.getAsJsonObject("return"), TradeApiConnector.ActiveOrders::class.java)), Optional.empty())
+                    else -> throw IllegalStateException("unknown success value $success")
+                }
+            })
+            .registerTypeAdapter(TradeApiConnector.GetTradeHistoryResult::class.java, JsonDeserializer<TradeApiConnector.GetTradeHistoryResult> { json, typeOfT, context ->
+                val root = json.getAsJsonObject()
+                val success = root.getAsJsonPrimitive("success").getAsInt()
+                when (success) {
+                    0 -> TradeApiConnector.GetTradeHistoryResult(Optional.empty(), Optional.of(root.getAsJsonPrimitive("error").getAsString()))
+                    1 -> TradeApiConnector.GetTradeHistoryResult(Optional.of(context.deserialize(root.getAsJsonObject("return"), TradeApiConnector.Trades::class.java)), Optional.empty())
                     else -> throw IllegalStateException("unknown success value $success")
                 }
             })
