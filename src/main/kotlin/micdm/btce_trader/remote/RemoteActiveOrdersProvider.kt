@@ -29,9 +29,7 @@ internal class RemoteActiveOrdersProvider @Inject constructor(logger: Logger,
             .switchMap {
                 tradeApiConnector.getActiveOrders()
                     .toObservable()
-                    .doOnError {
-                        logger.warn("Cannot get orders: $it")
-                    }
+                    .doOnError { logger.warn("Cannot get orders: $it") }
                     .onErrorResumeNext(Observable.empty())
             }
             .doOnNext { logger.info("Active orders are $it") }

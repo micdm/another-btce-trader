@@ -1,8 +1,8 @@
 package micdm.btce_trader
 
 import io.reactivex.Observable
+import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Function3
-import io.reactivex.functions.Function4
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.model.*
@@ -19,39 +19,36 @@ class OrderMaker @Inject constructor(private val logger: Logger,
                                      activeOrdersProvider: ActiveOrdersProvider,
                                      balanceProvider: BalanceProvider,
                                      priceProvider: PriceProvider,
-                                     tradeHistoryProvider: TradeHistoryProvider) {
+                                     config: Config) {
 
     private val PRICE_ROUNDING = MathContext(currencyPair.decimalPlaces)
     private val AMOUNT_ROUNDING = MathContext(currencyPair.decimalPlaces)
-    private val PRICE_DELTA = BigDecimal("0.03")
-    private val PRICE_THRESHOLD = BigDecimal("0.01")
-    private val ORDER_AMOUNT = BigDecimal("0.001")
+    private val PRICE_DELTA = config.getPriceDelta()
+    private val PRICE_THRESHOLD = config.getPriceThreshold()
+    private val ORDER_AMOUNT = config.getOrderAmount()
 
     private val createRequests: Subject<OrderData> = PublishSubject.create()
     private val cancelRequests: Subject<String> = PublishSubject.create()
 
     init {
+        logger.info("Trading options are: PRICE_DELTA=$PRICE_DELTA, PRICE_THRESHOLD=$PRICE_THRESHOLD, ORDER_AMOUNT=$ORDER_AMOUNT")
         priceProvider.getPrices()
             .withLatestFrom(
                 activeOrdersProvider.getActiveOrders(),
-                tradeHistoryProvider.getTradeHistory(),
                 balanceProvider.getBalance(),
-                Function4<BigDecimal, Collection<Order>, Collection<Trade>, Balance, Optional<OrderData>> { price, activeOrders, trades, balance ->
-                    getDataToCreateOrder(price, activeOrders, trades, balance)
+                Function3<BigDecimal, Collection<Order>, Balance, Optional<OrderData>> { price, activeOrders, balance ->
+                    getDataToCreateOrder(price, activeOrders, balance)
                 }
             )
             .filter { it.isPresent() }
             .map { it.get() }
-            .map { (type, price, amount) ->
-                OrderData(type, price.round(PRICE_ROUNDING), amount.round(AMOUNT_ROUNDING))
-            }
+            .map { (type, price, amount) -> OrderData(type, price.round(PRICE_ROUNDING), amount.round(AMOUNT_ROUNDING))}
             .subscribe(createRequests::onNext)
         priceProvider.getPrices()
             .withLatestFrom(
                 activeOrdersProvider.getActiveOrders(),
-                tradeHistoryProvider.getTradeHistory(),
-                Function3<BigDecimal, Collection<Order>, Collection<Trade>, Optional<String>> { price, activeOrders, trades ->
-                    getOrderIdToCancel(price, activeOrders, trades)
+                BiFunction<BigDecimal, Collection<Order>, Optional<String>> { price, activeOrders ->
+                    getOrderIdToCancel(price, activeOrders)
                 }
             )
             .filter { it.isPresent() }
@@ -59,32 +56,16 @@ class OrderMaker @Inject constructor(private val logger: Logger,
             .subscribe(cancelRequests::onNext)
     }
 
-    private fun getDataToCreateOrder(price: BigDecimal, activeOrders: Collection<Order>, trades: Collection<Trade>, balance: Balance): Optional<OrderData> {
-        if (activeOrders.isEmpty()) {
-            if (trades.isEmpty()) {
-                logger.info("No trades made yet, creating a new one")
-                return getDataToCreateFirstOrder(price, balance.second)
-            } else {
-                val data = trades.first().data
-                if (data.type == OrderType.BUY) {
-                    logger.info("Creating SELL order")
-                    return getDataToCreateSellOrder(data.price, ORDER_AMOUNT, balance.first)
-                }
-                if (data.type == OrderType.SELL) {
-                    logger.info("Creating BUY order")
-                    return getDataToCreateBuyOrder(data.price, ORDER_AMOUNT, balance.second)
-                }
-            }
-        }
-        return Optional.empty()
-    }
-
-    private fun getDataToCreateFirstOrder(price: BigDecimal, balance: BigDecimal): Optional<OrderData> {
-        if (balance >= price * ORDER_AMOUNT) {
-            return Optional.of(OrderData(OrderType.BUY, price, ORDER_AMOUNT))
-        } else {
-            logger.info("Not enough money")
+    private fun getDataToCreateOrder(price: BigDecimal, activeOrders: Collection<Order>, balance: Balance): Optional<OrderData> {
+        if (!activeOrders.isEmpty()) {
             return Optional.empty()
+        }
+        if (balance.first > balance.second * price) {
+            logger.info("Creating SELL order")
+            return getDataToCreateSellOrder(price, ORDER_AMOUNT, balance.first)
+        } else {
+            logger.info("Creating BUY order")
+            return getDataToCreateBuyOrder(price, ORDER_AMOUNT, balance.second)
         }
     }
 
@@ -107,19 +88,18 @@ class OrderMaker @Inject constructor(private val logger: Logger,
         }
     }
 
-    private fun getOrderIdToCancel(price: BigDecimal, activeOrders: Collection<Order>, trades: Collection<Trade>): Optional<String> {
-        if (activeOrders.isEmpty() || trades.isEmpty()) {
+    private fun getOrderIdToCancel(price: BigDecimal, activeOrders: Collection<Order>): Optional<String> {
+        if (activeOrders.isEmpty()) {
             return Optional.empty()
         }
-        val order = activeOrders.first()
-        val trade = trades.first()
-        if (order.data.type == OrderType.BUY && (price - trade.data.price) / trade.data.price > PRICE_THRESHOLD) {
-            logger.info("Price is going to get bigger (previous=${trade.data.price}, new=$price)")
-            return Optional.of(order.id)
+        val (id, data) = activeOrders.first()
+        if (data.type == OrderType.BUY && (price - data.price) / data.price > PRICE_DELTA + PRICE_THRESHOLD) {
+            logger.info("Price is going to get too big (previous=${data.price}, new=$price)")
+            return Optional.of(id)
         }
-        if (order.data.type == OrderType.SELL && (trade.data.price - price) / trade.data.price > PRICE_THRESHOLD) {
-            logger.info("Price is going to get smaller (previous=${trade.data.price}, new=$price)")
-            return Optional.of(order.id)
+        if (data.type == OrderType.SELL && (data.price - price) / data.price > PRICE_DELTA + PRICE_THRESHOLD) {
+            logger.info("Price is going to get too small (previous=${data.price}, new=$price)")
+            return Optional.of(id)
         }
         return Optional.empty()
     }
