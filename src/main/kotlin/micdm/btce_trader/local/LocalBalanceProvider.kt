@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalBalanceProvider @Inject constructor(private val balanceBuffer: LocalBalanceBuffer): BalanceProvider {
+internal class LocalBalanceProvider @Inject constructor(private val balanceBuffer: BalanceBuffer): BalanceProvider {
 
     override fun getBalance(): Observable<Balance> = balanceBuffer.get()
 }

@@ -3,7 +3,10 @@ package micdm.btce_trader.local
 import micdm.btce_trader.OrderHandler
 import micdm.btce_trader.OrderMaker
 import micdm.btce_trader.PriceProvider
-import micdm.btce_trader.model.*
+import micdm.btce_trader.model.Order
+import micdm.btce_trader.model.OrderData
+import micdm.btce_trader.model.OrderType
+import micdm.btce_trader.model.Trade
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -13,24 +16,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuffer: LocalActiveOrdersBuffer,
-                                                     private val balanceBuffer: LocalBalanceBuffer,
+internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuffer: ActiveOrdersBuffer,
+                                                     private val balanceBuffer: BalanceBuffer,
                                                      private val orderMaker: OrderMaker,
                                                      private val priceProvider: PriceProvider,
-                                                     private val tradeHistoryBuffer: LocalTradeHistoryBuffer,
-                                                     currencyPair: CurrencyPair): OrderHandler {
+                                                     private val tradeHistoryBuffer: TradeHistoryBuffer): OrderHandler {
 
-    private val PRICE_ROUNDING = MathContext(currencyPair.decimalPlaces)
-    private val AMOUNT_ROUNDING = MathContext(currencyPair.decimalPlaces)
+
     private val PRIZE_UP_ROUNDING = MathContext(8, RoundingMode.UP)
     private val PRIZE_DOWN_ROUNDING = MathContext(8, RoundingMode.DOWN)
     private val PRIZE_PART = BigDecimal("0.998")
 
     override fun start() {
         orderMaker.getCreateRequests()
-            .map { (type, price, amount) ->
-                OrderData(type, price.round(PRICE_ROUNDING), amount.round(AMOUNT_ROUNDING))
-            }
             .doOnNext { (type, price, amount) ->
                 if (type == OrderType.BUY) {
                     balanceBuffer.changeSecond((-price * amount).round(PRIZE_UP_ROUNDING))

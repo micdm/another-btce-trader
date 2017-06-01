@@ -13,7 +13,7 @@ import javax.inject.Singleton
 @Singleton
 internal class RemotePriceProvider @Inject constructor(private val publicApiConnector: PublicApiConnector): PriceProvider {
 
-    private val POLL_INTERVAL = Duration.ofSeconds(2)
+    private val POLL_INTERVAL = Duration.ofSeconds(5)
 
     private val prices: Subject<BigDecimal> = PublishSubject.create()
 
@@ -25,15 +25,11 @@ internal class RemotePriceProvider @Inject constructor(private val publicApiConn
             .switchMap {
                 publicApiConnector.getPrice()
                     .toObservable()
-                    .doOnError {
-                        println("Cannot get price: $it")
-                    }
+                    .doOnError { println("Cannot get price: $it") }
                     .onErrorResumeNext(Observable.empty())
             }
             .distinctUntilChanged()
-            .doOnNext {
-                println("New price is $it")
-            }
+            .doOnNext { println("Price is $it") }
             .subscribe(prices::onNext)
     }
 }

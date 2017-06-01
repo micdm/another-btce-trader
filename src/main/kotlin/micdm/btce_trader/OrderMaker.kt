@@ -7,19 +7,23 @@ import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.model.*
 import java.math.BigDecimal
+import java.math.MathContext
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
+class OrderMaker @Inject constructor(currencyPair: CurrencyPair,
+                                     activeOrdersProvider: ActiveOrdersProvider,
                                      balanceProvider: BalanceProvider,
                                      priceProvider: PriceProvider,
                                      tradeHistoryProvider: TradeHistoryProvider) {
 
+    private val PRICE_ROUNDING = MathContext(currencyPair.decimalPlaces)
+    private val AMOUNT_ROUNDING = MathContext(currencyPair.decimalPlaces)
     private val PRICE_DELTA = BigDecimal("0.03")
     private val PRICE_THRESHOLD = BigDecimal("0.01")
-    private val ORDER_AMOUNT = BigDecimal("0.1")
+    private val ORDER_AMOUNT = BigDecimal("0.001")
 
     private val createRequests: Subject<OrderData> = PublishSubject.create()
     private val cancelRequests: Subject<String> = PublishSubject.create()
@@ -36,6 +40,9 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
             )
             .filter { it.isPresent() }
             .map { it.get() }
+            .map { (type, price, amount) ->
+                OrderData(type, price.round(PRICE_ROUNDING), amount.round(AMOUNT_ROUNDING))
+            }
             .subscribe(createRequests::onNext)
         priceProvider.getPrices()
             .withLatestFrom(
@@ -56,14 +63,14 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
                 println("No trades made yet, creating a new one")
                 return getDataToCreateFirstOrder(price, balance.second)
             } else {
-                val data = trades.last().data
+                val data = trades.first().data
                 if (data.type == OrderType.BUY) {
                     println("Creating SELL order")
-                    return getDataToCreateSellOrder(data.price, data.amount, balance.first)
+                    return getDataToCreateSellOrder(data.price, ORDER_AMOUNT, balance.first)
                 }
                 if (data.type == OrderType.SELL) {
                     println("Creating BUY order")
-                    return getDataToCreateBuyOrder(data.price, data.amount, balance.second)
+                    return getDataToCreateBuyOrder(data.price, ORDER_AMOUNT, balance.second)
                 }
             }
         }
@@ -103,7 +110,7 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
             return Optional.empty()
         }
         val order = activeOrders.first()
-        val trade = trades.last()
+        val trade = trades.first()
         if (order.data.type == OrderType.BUY && (price - trade.data.price) / trade.data.price > PRICE_THRESHOLD) {
             println("Price is going to get bigger (previous=${trade.data.price}, new=$price)")
             return Optional.of(order.id)

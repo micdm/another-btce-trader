@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalActiveOrdersProvider @Inject constructor(private val activeOrdersBuffer: LocalActiveOrdersBuffer): ActiveOrdersProvider {
+internal class LocalActiveOrdersProvider @Inject constructor(private val activeOrdersBuffer: ActiveOrdersBuffer): ActiveOrdersProvider {
 
     override fun getActiveOrders(): Observable<Collection<Order>> = activeOrdersBuffer.get()
 }

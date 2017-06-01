@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalActiveOrdersBuffer @Inject constructor() {
+internal class ActiveOrdersBuffer @Inject constructor() {
 
     private val orders = BehaviorSubject.createDefault<Collection<Order>>(Collections.emptyList())
 

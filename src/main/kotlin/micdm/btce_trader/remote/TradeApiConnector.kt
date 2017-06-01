@@ -6,6 +6,7 @@ import io.reactivex.Single
 import io.reactivex.SingleEmitter
 import micdm.btce_trader.Config
 import micdm.btce_trader.model.*
+import micdm.btce_trader.model.Currency
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -48,16 +49,20 @@ internal class TradeApiConnector @Inject constructor(private val config: Config,
 
     data class TradeInfo(val orderId: String, val type: String, val rate: BigDecimal, val amount: BigDecimal, val timestamp: Long)
 
+    class TradeResult(data: Optional<Any>, error: Optional<String>) : Result<Any>(data, error)
+
+    class CancelOrderResult(data: Optional<Any>, error: Optional<String>) : Result<Any>(data, error)
+
     fun getBalance(): Single<Balance> {
         return doRequest<Info>("getInfo", type=GetInfoResult::class.java).map {
-            Balance(it.funds.get(currencyPair.first.name.toLowerCase())!!,
-                    it.funds.get(currencyPair.second.name.toLowerCase())!!)
+            Balance(it.funds.get(currencyToString(currencyPair.first))!!,
+                    it.funds.get(currencyToString(currencyPair.second))!!)
         }
     }
 
     fun getActiveOrders(): Single<Collection<Order>> {
         return doRequest<ActiveOrders>("ActiveOrders", mapOf(
-            "pair" to "${currencyPair.first.name.toLowerCase()}_${currencyPair.second.name.toLowerCase()}"
+            "pair" to pairToString()
         ), GetActiveOrdersResult::class.java)
             .map<Collection<Order>> {
                 val orders = ArrayList<Order>()
@@ -76,7 +81,7 @@ internal class TradeApiConnector @Inject constructor(private val config: Config,
 
     fun getTradeHistory(): Single<Collection<Trade>> {
         return doRequest<Trades>("TradeHistory", mapOf(
-            "pair" to "${currencyPair.first.name.toLowerCase()}_${currencyPair.second.name.toLowerCase()}",
+            "pair" to pairToString(),
             "count" to "10"
         ), GetTradeHistoryResult::class.java)
             .map<Collection<Trade>> {
@@ -87,6 +92,21 @@ internal class TradeApiConnector @Inject constructor(private val config: Config,
                 }
                 trades.sortedByDescending { it.id }
             }
+    }
+
+    fun createOrder(data: OrderData): Single<Any> {
+        return doRequest("Trade", mapOf(
+            "pair" to pairToString(),
+            "type" to if (data.type == OrderType.BUY) "buy" else "sell",
+            "rate" to data.price.toPlainString(),
+            "amount" to data.amount.toPlainString()
+        ), TradeResult::class.java)
+    }
+
+    fun cancelOrder(id: String): Single<Any> {
+        return doRequest("CancelOrder", mapOf(
+            "order_id" to id
+        ), CancelOrderResult::class.java)
     }
 
     private fun <T1> doRequest(method: String, params: Map<String, String> = Collections.emptyMap(), type: Type): Single<T1> {
@@ -137,4 +157,8 @@ internal class TradeApiConnector @Inject constructor(private val config: Config,
         }
         return parts.joinToString("&")
     }
+
+    private fun currencyToString(currency: Currency): String = currency.name.toLowerCase()
+
+    private fun pairToString(): String = "${currencyToString(currencyPair.first)}_${currencyToString(currencyPair.second)}"
 }

@@ -1,25 +1,29 @@
 package micdm.btce_trader.remote
 
 import io.reactivex.Observable
-import io.reactivex.subjects.PublishSubject
+import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.ActiveOrdersProvider
+import micdm.btce_trader.TradeHistoryProvider
 import micdm.btce_trader.model.Order
-import java.time.Duration
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class RemoteActiveOrdersProvider @Inject constructor(private val tradeApiConnector: TradeApiConnector): ActiveOrdersProvider {
+internal class RemoteActiveOrdersProvider @Inject constructor(tradeApiConnector: TradeApiConnector,
+                                                              orderStatusBuffer: OrderStatusBuffer,
+                                                              tradeHistoryProvider: TradeHistoryProvider): ActiveOrdersProvider {
 
-    private val POLL_INTERVAL = Duration.ofSeconds(300)
-
-    private val orders: Subject<Collection<Order>> = PublishSubject.create()
+    private val orders: Subject<Collection<Order>> = BehaviorSubject.create()
 
     init {
         Observable
-            .interval(0, POLL_INTERVAL.seconds, TimeUnit.SECONDS)
+            .merge(
+                orderStatusBuffer.getCreates(),
+                orderStatusBuffer.getCancels(),
+                tradeHistoryProvider.getTradeHistory().distinctUntilChanged()
+            )
+            .startWith(Any())
             .switchMap {
                 tradeApiConnector.getActiveOrders()
                     .toObservable()
@@ -28,6 +32,7 @@ internal class RemoteActiveOrdersProvider @Inject constructor(private val tradeA
                     }
                     .onErrorResumeNext(Observable.empty())
             }
+            .doOnNext { println("Active orders are $it") }
             .subscribe(orders::onNext)
     }
 

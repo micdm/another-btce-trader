@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalTradeHistoryProvider @Inject constructor(private val tradeHistoryBuffer: LocalTradeHistoryBuffer): TradeHistoryProvider {
+internal class LocalTradeHistoryProvider @Inject constructor(private val tradeHistoryBuffer: TradeHistoryBuffer): TradeHistoryProvider {
 
     override fun getTradeHistory(): Observable<Collection<Trade>> = tradeHistoryBuffer.get()
 }

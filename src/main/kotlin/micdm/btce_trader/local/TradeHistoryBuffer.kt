@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalTradeHistoryBuffer @Inject constructor() {
+internal class TradeHistoryBuffer @Inject constructor() {
 
     private val trades = BehaviorSubject.createDefault<Collection<Trade>>(Collections.emptyList())
 

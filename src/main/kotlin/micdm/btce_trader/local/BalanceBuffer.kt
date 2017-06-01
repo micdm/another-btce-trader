@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalBalanceBuffer @Inject constructor(initial: Balance) {
+internal class BalanceBuffer @Inject constructor(initial: Balance) {
 
     private val balance = BehaviorSubject.createDefault(initial)
 

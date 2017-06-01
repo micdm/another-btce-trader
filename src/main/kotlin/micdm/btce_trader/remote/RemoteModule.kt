@@ -62,6 +62,24 @@ class RemoteModule {
                     else -> throw IllegalStateException("unknown success value $success")
                 }
             })
+            .registerTypeAdapter(TradeApiConnector.TradeResult::class.java, JsonDeserializer<TradeApiConnector.TradeResult> { json, typeOfT, context ->
+                val root = json.getAsJsonObject()
+                val success = root.getAsJsonPrimitive("success").getAsInt()
+                when (success) {
+                    0 -> TradeApiConnector.TradeResult(Optional.empty(), Optional.of(root.getAsJsonPrimitive("error").getAsString()))
+                    1 -> TradeApiConnector.TradeResult(Optional.of(Any()), Optional.empty())
+                    else -> throw IllegalStateException("unknown success value $success")
+                }
+            })
+            .registerTypeAdapter(TradeApiConnector.CancelOrderResult::class.java, JsonDeserializer<TradeApiConnector.CancelOrderResult> { json, typeOfT, context ->
+                val root = json.getAsJsonObject()
+                val success = root.getAsJsonPrimitive("success").getAsInt()
+                when (success) {
+                    0 -> TradeApiConnector.CancelOrderResult(Optional.empty(), Optional.of(root.getAsJsonPrimitive("error").getAsString()))
+                    1 -> TradeApiConnector.CancelOrderResult(Optional.of(Any()), Optional.empty())
+                    else -> throw IllegalStateException("unknown success value $success")
+                }
+            })
             .create()
     }
 }
