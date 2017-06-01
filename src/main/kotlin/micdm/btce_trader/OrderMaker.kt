@@ -2,23 +2,18 @@ package micdm.btce_trader
 
 import io.reactivex.Observable
 import io.reactivex.functions.Function3
-import io.reactivex.functions.Function5
+import io.reactivex.functions.Function4
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import micdm.btce_trader.model.Order
-import micdm.btce_trader.model.OrderData
-import micdm.btce_trader.model.OrderType
-import micdm.btce_trader.model.Trade
+import micdm.btce_trader.model.*
 import java.math.BigDecimal
 import java.util.*
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
-                                     @Named("first") firstCurrencyBalanceProvider: BalanceProvider,
-                                     @Named("second") secondCurrencyBalanceProvider: BalanceProvider,
+                                     balanceProvider: BalanceProvider,
                                      priceProvider: PriceProvider,
                                      tradeHistoryProvider: TradeHistoryProvider) {
 
@@ -34,10 +29,9 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
             .withLatestFrom(
                 activeOrdersProvider.getActiveOrders(),
                 tradeHistoryProvider.getTradeHistory(),
-                firstCurrencyBalanceProvider.getBalance(),
-                secondCurrencyBalanceProvider.getBalance(),
-                Function5<BigDecimal, Collection<Order>, Collection<Trade>, BigDecimal, BigDecimal, Optional<OrderData>> { price, activeOrders, trades, firstCurrencyBalance, secondCurrencyBalance ->
-                    getDataToCreateOrder(price, activeOrders, trades, firstCurrencyBalance, secondCurrencyBalance)
+                balanceProvider.getBalance(),
+                Function4<BigDecimal, Collection<Order>, Collection<Trade>, Balance, Optional<OrderData>> { price, activeOrders, trades, balance ->
+                    getDataToCreateOrder(price, activeOrders, trades, balance)
                 }
             )
             .filter { it.isPresent() }
@@ -56,29 +50,28 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
             .subscribe(cancelRequests::onNext)
     }
 
-    private fun getDataToCreateOrder(price: BigDecimal, activeOrders: Collection<Order>, trades: Collection<Trade>,
-                                     firstCurrencyBalance: BigDecimal, secondCurrencyBalance: BigDecimal): Optional<OrderData> {
+    private fun getDataToCreateOrder(price: BigDecimal, activeOrders: Collection<Order>, trades: Collection<Trade>, balance: Balance): Optional<OrderData> {
         if (activeOrders.isEmpty()) {
             if (trades.isEmpty()) {
                 println("No trades made yet, creating a new one")
-                return getDataToCreateFirstOrder(price, secondCurrencyBalance)
+                return getDataToCreateFirstOrder(price, balance.second)
             } else {
                 val data = trades.last().data
                 if (data.type == OrderType.BUY) {
                     println("Creating SELL order")
-                    return getDataToCreateSellOrder(data.price, data.amount, firstCurrencyBalance)
+                    return getDataToCreateSellOrder(data.price, data.amount, balance.first)
                 }
                 if (data.type == OrderType.SELL) {
                     println("Creating BUY order")
-                    return getDataToCreateBuyOrder(data.price, data.amount, secondCurrencyBalance)
+                    return getDataToCreateBuyOrder(data.price, data.amount, balance.second)
                 }
             }
         }
         return Optional.empty()
     }
 
-    private fun getDataToCreateFirstOrder(price: BigDecimal, secondCurrencyBalance: BigDecimal): Optional<OrderData> {
-        if (secondCurrencyBalance >= price * ORDER_AMOUNT) {
+    private fun getDataToCreateFirstOrder(price: BigDecimal, balance: BigDecimal): Optional<OrderData> {
+        if (balance >= price * ORDER_AMOUNT) {
             return Optional.of(OrderData(OrderType.BUY, price, ORDER_AMOUNT))
         } else {
             println("Not enough money")
@@ -86,9 +79,9 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
         }
     }
 
-    private fun getDataToCreateBuyOrder(price: BigDecimal, amount: BigDecimal, secondCurrencyBalance: BigDecimal): Optional<OrderData> {
+    private fun getDataToCreateBuyOrder(price: BigDecimal, amount: BigDecimal, balance: BigDecimal): Optional<OrderData> {
         val newPrice = price * (BigDecimal.ONE - PRICE_DELTA)
-        if (secondCurrencyBalance >= newPrice * amount) {
+        if (balance >= newPrice * amount) {
             return Optional.of(OrderData(OrderType.BUY, newPrice, amount))
         } else {
             println("Not enough money")
@@ -96,8 +89,8 @@ class OrderMaker @Inject constructor(activeOrdersProvider: ActiveOrdersProvider,
         }
     }
 
-    private fun getDataToCreateSellOrder(price: BigDecimal, amount: BigDecimal, firstCurrencyBalance: BigDecimal): Optional<OrderData> {
-        if (firstCurrencyBalance >= amount) {
+    private fun getDataToCreateSellOrder(price: BigDecimal, amount: BigDecimal, balance: BigDecimal): Optional<OrderData> {
+        if (balance >= amount) {
             return Optional.of(OrderData(OrderType.SELL, price * (BigDecimal.ONE + PRICE_DELTA), amount))
         } else {
             println("Not enough money")

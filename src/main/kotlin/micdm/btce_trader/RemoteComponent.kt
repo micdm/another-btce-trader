@@ -3,7 +3,6 @@ package micdm.btce_trader
 import dagger.Component
 import micdm.btce_trader.misc.MainThreadExecutor
 import micdm.btce_trader.remote.RemoteModule
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
@@ -11,8 +10,7 @@ import javax.inject.Singleton
 interface RemoteComponent {
 
     fun getActiveOrdersProvider(): ActiveOrdersProvider
-    @Named("first") fun getFirstCurrencyBalanceProvider(): BalanceProvider
-    @Named("second") fun getSecondCurrencyBalanceProvider(): BalanceProvider
+    fun getBalanceProvider(): BalanceProvider
     fun getOrderHandler(): OrderHandler
     fun getOrderMaker(): OrderMaker
     fun getPriceProvider(): PriceProvider

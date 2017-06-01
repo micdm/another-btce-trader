@@ -5,7 +5,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class NonceKeeper @Inject constructor() {
+internal class NonceKeeper @Inject constructor() {
 
     fun get(): Int {
         val file = File("data/nonce.data")

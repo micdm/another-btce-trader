@@ -7,7 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DataSigner @Inject constructor() {
+internal class DataSigner @Inject constructor() {
 
     fun getSignature(data: String, key: String): String {
         val mac = Mac.getInstance("HmacSHA512")

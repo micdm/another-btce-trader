@@ -2,7 +2,6 @@ package micdm.btce_trader
 
 import dagger.Component
 import micdm.btce_trader.local.LocalModule
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
@@ -10,8 +9,7 @@ import javax.inject.Singleton
 interface LocalComponent {
 
     fun getActiveOrdersProvider(): ActiveOrdersProvider
-    @Named("first") fun getFirstCurrencyBalanceProvider(): BalanceProvider
-    @Named("second") fun getSecondCurrencyBalanceProvider(): BalanceProvider
+    fun getBalanceProvider(): BalanceProvider
     fun getOrderHandler(): OrderHandler
     fun getOrderMaker(): OrderMaker
     fun getPriceProvider(): PriceProvider

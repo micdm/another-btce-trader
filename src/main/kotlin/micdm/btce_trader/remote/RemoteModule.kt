@@ -8,7 +8,6 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import micdm.btce_trader.*
-import micdm.btce_trader.model.Currency
 import okhttp3.OkHttpClient
 import java.util.*
 import javax.inject.Named
@@ -19,7 +18,7 @@ class RemoteModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    internal fun provideOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor {
                 val now = System.currentTimeMillis()
@@ -33,7 +32,7 @@ class RemoteModule {
     @Provides
     @Singleton
     @Named("trade")
-    fun provideTradeGson(): Gson {
+    internal fun provideTradeGson(): Gson {
         return GsonBuilder()
             .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .registerTypeAdapter(TradeApiConnector.GetInfoResult::class.java, JsonDeserializer<TradeApiConnector.GetInfoResult> { json, typeOfT, context ->
@@ -65,20 +64,6 @@ class RemoteModule {
             })
             .create()
     }
-
-    @Singleton
-    @Provides
-    @Named("first")
-    fun provideFirstCurrencyBalanceProvider(@Named("first") firstCurrency: Currency,
-                                            @Named("second") secondCurrency: Currency,
-                                            tradeApiConnector: TradeApiConnector): BalanceProvider = RemoteBalanceProvider(firstCurrency, firstCurrency, secondCurrency, tradeApiConnector)
-
-    @Singleton
-    @Provides
-    @Named("second")
-    fun provideSecondCurrencyBalanceProvider(@Named("first") firstCurrency: Currency,
-                                             @Named("second") secondCurrency: Currency,
-                                             tradeApiConnector: TradeApiConnector): BalanceProvider = RemoteBalanceProvider(secondCurrency, firstCurrency, secondCurrency, tradeApiConnector)
 }
 
 @Module
@@ -99,4 +84,8 @@ internal abstract class ImplModule {
     @Singleton
     @Binds
     internal abstract fun provideTradeHistoryProvider(tradeHistoryProvider: RemoteTradeHistoryProvider): TradeHistoryProvider
+
+    @Singleton
+    @Binds
+    internal abstract fun provideBalanceProvider(balanceProvider: RemoteBalanceProvider): BalanceProvider
 }

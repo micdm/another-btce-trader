@@ -2,18 +2,25 @@ package micdm.btce_trader.local
 
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
-import micdm.btce_trader.model.Currency
+import micdm.btce_trader.model.Balance
 import java.math.BigDecimal
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class LocalBalanceBuffer constructor(private val currency: Currency,
-                                     initial: BigDecimal) {
+@Singleton
+internal class LocalBalanceBuffer @Inject constructor(initial: Balance) {
 
     private val balance = BehaviorSubject.createDefault(initial)
 
-    fun get(): Observable<BigDecimal> = balance
+    fun get(): Observable<Balance> = balance
 
-    fun change(value: BigDecimal) {
-        println("Changing balance for $value$currency")
-        balance.onNext(balance.value + value)
+    fun changeFirst(value: BigDecimal) {
+        println("Changing first balance for $value")
+        balance.onNext(balance.value.copy(first=balance.value.first + value))
+    }
+
+    fun changeSecond(value: BigDecimal) {
+        println("Changing second balance for $value")
+        balance.onNext(balance.value.copy(second=balance.value.second + value))
     }
 }

@@ -4,9 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import micdm.btce_trader.*
-import micdm.btce_trader.model.Currency
+import micdm.btce_trader.model.Balance
 import java.math.BigDecimal
-import javax.inject.Named
 import javax.inject.Singleton
 
 @Module(includes = arrayOf(ImplModule::class))
@@ -14,25 +13,7 @@ class LocalModule {
 
     @Singleton
     @Provides
-    @Named("first")
-    fun provideFirstCurrencyBalanceProvider(@Named("first") currency: Currency,
-                                            @Named("first") balanceBuffer: LocalBalanceBuffer): BalanceProvider = LocalBalanceProvider(currency, balanceBuffer)
-
-    @Singleton
-    @Provides
-    @Named("second")
-    fun provideSecondCurrencyBalanceProvider(@Named("second") currency: Currency,
-                                             @Named("second") balanceBuffer: LocalBalanceBuffer): BalanceProvider = LocalBalanceProvider(currency, balanceBuffer)
-
-    @Singleton
-    @Provides
-    @Named("first")
-    fun provideFirstCurrencyBalanceBuffer(@Named("first") currency: Currency): LocalBalanceBuffer = LocalBalanceBuffer(currency, BigDecimal.ZERO)
-
-    @Singleton
-    @Provides
-    @Named("second")
-    fun provideSecondCurrencyBalanceBuffer(@Named("second") currency: Currency): LocalBalanceBuffer = LocalBalanceBuffer(currency, BigDecimal("400"))
+    internal fun provideBalance(): Balance = Balance(BigDecimal.ZERO, BigDecimal("400"))
 }
 
 @Module
@@ -53,4 +34,8 @@ abstract class ImplModule {
     @Singleton
     @Binds
     internal abstract fun provideTradeHistoryProvider(tradeHistoryProvider: LocalTradeHistoryProvider): TradeHistoryProvider
+
+    @Singleton
+    @Binds
+    internal abstract fun provideBalanceProvider(balanceProvider: LocalBalanceProvider): BalanceProvider
 }

@@ -22,13 +22,13 @@ import javax.inject.Singleton
 import kotlin.collections.ArrayList
 
 @Singleton
-class TradeApiConnector @Inject constructor(private val config: Config,
-                                            private val okHttpClient: OkHttpClient,
-                                            private val dataSigner: DataSigner,
-                                            @Named("trade") private val gson: Gson,
-                                            private val currencyPair: CurrencyPair,
-                                            private val nonceKeeper: NonceKeeper,
-                                            @Named("single") private val singleScheduler: Scheduler) {
+internal class TradeApiConnector @Inject constructor(private val config: Config,
+                                                     private val okHttpClient: OkHttpClient,
+                                                     private val dataSigner: DataSigner,
+                                                     @Named("trade") private val gson: Gson,
+                                                     private val currencyPair: CurrencyPair,
+                                                     private val nonceKeeper: NonceKeeper,
+                                                     @Named("single") private val singleScheduler: Scheduler) {
 
     open class Result<T>(val data: Optional<T>, val error: Optional<String>)
 

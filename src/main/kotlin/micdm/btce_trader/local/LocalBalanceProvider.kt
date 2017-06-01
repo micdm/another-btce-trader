@@ -2,11 +2,12 @@ package micdm.btce_trader.local
 
 import io.reactivex.Observable
 import micdm.btce_trader.BalanceProvider
-import micdm.btce_trader.model.Currency
-import java.math.BigDecimal
+import micdm.btce_trader.model.Balance
+import javax.inject.Inject
+import javax.inject.Singleton
 
-internal class LocalBalanceProvider constructor(private val currency: Currency,
-                                                private val balanceBuffer: LocalBalanceBuffer): BalanceProvider {
+@Singleton
+internal class LocalBalanceProvider @Inject constructor(private val balanceBuffer: LocalBalanceBuffer): BalanceProvider {
 
-    override fun getBalance(): Observable<BigDecimal> = balanceBuffer.get()
+    override fun getBalance(): Observable<Balance> = balanceBuffer.get()
 }

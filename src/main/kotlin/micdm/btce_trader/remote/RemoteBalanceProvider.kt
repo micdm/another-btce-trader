@@ -4,19 +4,18 @@ import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.BalanceProvider
-import micdm.btce_trader.model.Currency
-import java.math.BigDecimal
+import micdm.btce_trader.model.Balance
 import java.time.Duration
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-internal class RemoteBalanceProvider constructor(private val currency: Currency,
-                                                 private val firstCurrency: Currency,
-                                                 private val secondCurrency: Currency,
-                                                 private val tradeApiConnector: TradeApiConnector): BalanceProvider {
+@Singleton
+internal class RemoteBalanceProvider @Inject constructor(private val tradeApiConnector: TradeApiConnector): BalanceProvider {
 
     private val POLL_INTERVAL = Duration.ofSeconds(300)
 
-    private val balance: Subject<BigDecimal> = PublishSubject.create()
+    private val balance: Subject<Balance> = PublishSubject.create()
 
     init {
         Observable
@@ -29,15 +28,8 @@ internal class RemoteBalanceProvider constructor(private val currency: Currency,
                     }
                     .onErrorResumeNext(Observable.empty())
             }
-            .map {
-                when (currency) {
-                    firstCurrency -> it.first
-                    secondCurrency -> it.second
-                    else -> throw IllegalStateException("unknown currency $currency")
-                }
-            }
             .subscribe(balance::onNext)
     }
 
-    override fun getBalance(): Observable<BigDecimal> = balance
+    override fun getBalance(): Observable<Balance> = balance
 }
