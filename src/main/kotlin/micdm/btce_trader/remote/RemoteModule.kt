@@ -9,6 +9,7 @@ import dagger.Module
 import dagger.Provides
 import micdm.btce_trader.*
 import okhttp3.OkHttpClient
+import org.slf4j.Logger
 import java.util.*
 import javax.inject.Named
 import javax.inject.Singleton
@@ -18,12 +19,12 @@ class RemoteModule {
 
     @Provides
     @Singleton
-    internal fun provideOkHttpClient(): OkHttpClient {
+    internal fun provideOkHttpClient(logger: Logger): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor {
                 val now = System.currentTimeMillis()
                 val response = it.proceed(it.request())
-                println("${it.request()} to $response in ${System.currentTimeMillis() - now}ms")
+                logger.debug("${it.request()} to $response in ${System.currentTimeMillis() - now}ms")
                 response
             }
             .build()

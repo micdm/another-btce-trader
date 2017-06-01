@@ -5,6 +5,7 @@ import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.PriceProvider
+import org.slf4j.Logger
 import java.io.File
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -12,7 +13,8 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
-internal class LocalPriceProvider @Inject constructor(@Named("common") private val gson: Gson): PriceProvider {
+internal class LocalPriceProvider @Inject constructor(@Named("common") private val gson: Gson,
+                                                      private val logger: Logger): PriceProvider {
 
     data class Pairs(val btc_usd: Pair)
 
@@ -31,18 +33,7 @@ internal class LocalPriceProvider @Inject constructor(@Named("common") private v
                 source.onComplete()
             }
             .distinctUntilChanged()
-            .doOnNext {
-                println("New price is $it")
-            }
-            .subscribe(prices)
-//        Observable.just(
-//            BigDecimal("1000"),
-//            BigDecimal("900"),
-//            BigDecimal("1010"),
-//            BigDecimal("1050"),
-//            BigDecimal("1060")
-//        )
-
-//            .subscribe(prices)
+            .doOnNext { logger.info("New price is $it") }
+            .subscribe(prices::onNext)
     }
 }

@@ -53,6 +53,8 @@ internal class TradeApiConnector @Inject constructor(private val config: Config,
 
     class CancelOrderResult(data: Optional<Any>, error: Optional<String>) : Result<Any>(data, error)
 
+    private val REPEAT_COUNT = 3L
+
     fun getBalance(): Single<Balance> {
         return doRequest<Info>("getInfo", type=GetInfoResult::class.java).map {
             Balance(it.funds.get(currencyToString(currencyPair.first))!!,
@@ -138,6 +140,7 @@ internal class TradeApiConnector @Inject constructor(private val config: Config,
                 }
             }
             .subscribeOn(singleScheduler)
+            .retry(REPEAT_COUNT)
     }
 
     private fun getFormBody(method: String, params: Map<String, String>): FormBody {

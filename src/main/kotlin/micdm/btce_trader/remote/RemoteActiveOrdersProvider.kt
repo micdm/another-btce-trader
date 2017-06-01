@@ -6,11 +6,13 @@ import io.reactivex.subjects.Subject
 import micdm.btce_trader.ActiveOrdersProvider
 import micdm.btce_trader.TradeHistoryProvider
 import micdm.btce_trader.model.Order
+import org.slf4j.Logger
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class RemoteActiveOrdersProvider @Inject constructor(tradeApiConnector: TradeApiConnector,
+internal class RemoteActiveOrdersProvider @Inject constructor(logger: Logger,
+                                                              tradeApiConnector: TradeApiConnector,
                                                               orderStatusBuffer: OrderStatusBuffer,
                                                               tradeHistoryProvider: TradeHistoryProvider): ActiveOrdersProvider {
 
@@ -28,11 +30,11 @@ internal class RemoteActiveOrdersProvider @Inject constructor(tradeApiConnector:
                 tradeApiConnector.getActiveOrders()
                     .toObservable()
                     .doOnError {
-                        println("Cannot get orders: $it")
+                        logger.warn("Cannot get orders: $it")
                     }
                     .onErrorResumeNext(Observable.empty())
             }
-            .doOnNext { println("Active orders are $it") }
+            .doOnNext { logger.info("Active orders are $it") }
             .subscribe(orders::onNext)
     }
 

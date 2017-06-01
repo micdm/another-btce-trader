@@ -3,6 +3,7 @@ package micdm.btce_trader
 import dagger.Component
 import micdm.btce_trader.misc.MainThreadExecutor
 import micdm.btce_trader.remote.RemoteModule
+import org.slf4j.Logger
 import javax.inject.Singleton
 
 @Singleton
@@ -16,4 +17,5 @@ interface RemoteComponent {
     fun getPriceProvider(): PriceProvider
     fun getTradeHistoryProvider(): TradeHistoryProvider
     fun getMainThreadExecutor(): MainThreadExecutor
+    fun getLogger(): Logger
 }

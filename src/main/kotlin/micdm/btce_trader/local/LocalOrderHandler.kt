@@ -7,6 +7,7 @@ import micdm.btce_trader.model.Order
 import micdm.btce_trader.model.OrderData
 import micdm.btce_trader.model.OrderType
 import micdm.btce_trader.model.Trade
+import org.slf4j.Logger
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -20,7 +21,8 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                                                      private val balanceBuffer: BalanceBuffer,
                                                      private val orderMaker: OrderMaker,
                                                      private val priceProvider: PriceProvider,
-                                                     private val tradeHistoryBuffer: TradeHistoryBuffer): OrderHandler {
+                                                     private val tradeHistoryBuffer: TradeHistoryBuffer,
+                                                     private val logger: Logger): OrderHandler {
 
 
     private val PRIZE_UP_ROUNDING = MathContext(8, RoundingMode.UP)
@@ -48,7 +50,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                     .filter { price -> (data.type == OrderType.BUY && data.price >= price) || (data.type == OrderType.SELL && data.price <= price) }
                     .map { Trade(UUID.randomUUID().toString(), id, OrderData(data.type, data.price, (data.amount * PRIZE_PART).round(PRIZE_DOWN_ROUNDING)), ZonedDateTime.now()) }
                     .doOnNext { trade ->
-                        println("Removing order $id: complete")
+                        logger.info("Removing order $id: complete")
                         activeOrdersBuffer.remove(id)
                         if (data.type == OrderType.BUY) {
                             balanceBuffer.changeFirst(data.amount)
@@ -72,7 +74,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                 if (data.type == OrderType.SELL) {
                     balanceBuffer.changeFirst(data.amount)
                 }
-                println("Removing order $id: canceled")
+                logger.info("Removing order $id: canceled")
                 activeOrdersBuffer.remove(id)
             }
     }

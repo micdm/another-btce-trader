@@ -33,7 +33,7 @@ fun main(args: Array<String>) {
                     "${balance.asFirst(price) + orderBalance.asFirst(price)}/${balance.asSecond(price) + orderBalance.asSecond(price)} in total"
             }
         )
-        .subscribe(::println)
+        .subscribe(component.getLogger()::info)
     component.getOrderHandler().start()
     component.getPriceProvider().start()
     component.getMainThreadExecutor().run()

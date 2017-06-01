@@ -3,12 +3,13 @@ package micdm.btce_trader.local
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
 import micdm.btce_trader.model.Order
+import org.slf4j.Logger
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class ActiveOrdersBuffer @Inject constructor() {
+internal class ActiveOrdersBuffer @Inject constructor(private val logger: Logger) {
 
     private val orders = BehaviorSubject.createDefault<Collection<Order>>(Collections.emptyList())
 
@@ -19,14 +20,14 @@ internal class ActiveOrdersBuffer @Inject constructor() {
     }
 
     fun add(order: Order) {
-        println("Creating order $order")
+        logger.info("Creating order $order")
         val orders = ArrayList(this.orders.value)
         orders.add(order)
         this.orders.onNext(orders)
     }
 
     fun remove(id: String) {
-        println("Removing order $id")
+        logger.info("Removing order $id")
         val orders = ArrayList(this.orders.value)
         orders.removeIf{ it.id == id }
         this.orders.onNext(orders)

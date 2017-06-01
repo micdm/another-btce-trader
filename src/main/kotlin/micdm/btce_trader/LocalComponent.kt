@@ -2,6 +2,7 @@ package micdm.btce_trader
 
 import dagger.Component
 import micdm.btce_trader.local.LocalModule
+import org.slf4j.Logger
 import javax.inject.Singleton
 
 @Singleton
@@ -13,4 +14,5 @@ interface LocalComponent {
     fun getOrderHandler(): OrderHandler
     fun getOrderMaker(): OrderMaker
     fun getPriceProvider(): PriceProvider
+    fun getLogger(): Logger
 }

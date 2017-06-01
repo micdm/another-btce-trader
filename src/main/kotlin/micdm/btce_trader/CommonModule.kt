@@ -8,6 +8,8 @@ import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
 import micdm.btce_trader.model.Currency
 import micdm.btce_trader.model.CurrencyPair
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -39,4 +41,10 @@ class CommonModule {
     @Singleton
     @Named("single")
     fun provideSingleScheduler(): Scheduler = Schedulers.single()
+
+    @Provides
+    @Singleton
+    fun provideLogger(): Logger {
+        return LoggerFactory.getLogger("main")
+    }
 }

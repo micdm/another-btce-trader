@@ -6,6 +6,7 @@ import io.reactivex.functions.Function4
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.model.*
+import org.slf4j.Logger
 import java.math.BigDecimal
 import java.math.MathContext
 import java.util.*
@@ -13,7 +14,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class OrderMaker @Inject constructor(currencyPair: CurrencyPair,
+class OrderMaker @Inject constructor(private val logger: Logger,
+                                     currencyPair: CurrencyPair,
                                      activeOrdersProvider: ActiveOrdersProvider,
                                      balanceProvider: BalanceProvider,
                                      priceProvider: PriceProvider,
@@ -60,16 +62,16 @@ class OrderMaker @Inject constructor(currencyPair: CurrencyPair,
     private fun getDataToCreateOrder(price: BigDecimal, activeOrders: Collection<Order>, trades: Collection<Trade>, balance: Balance): Optional<OrderData> {
         if (activeOrders.isEmpty()) {
             if (trades.isEmpty()) {
-                println("No trades made yet, creating a new one")
+                logger.info("No trades made yet, creating a new one")
                 return getDataToCreateFirstOrder(price, balance.second)
             } else {
                 val data = trades.first().data
                 if (data.type == OrderType.BUY) {
-                    println("Creating SELL order")
+                    logger.info("Creating SELL order")
                     return getDataToCreateSellOrder(data.price, ORDER_AMOUNT, balance.first)
                 }
                 if (data.type == OrderType.SELL) {
-                    println("Creating BUY order")
+                    logger.info("Creating BUY order")
                     return getDataToCreateBuyOrder(data.price, ORDER_AMOUNT, balance.second)
                 }
             }
@@ -81,7 +83,7 @@ class OrderMaker @Inject constructor(currencyPair: CurrencyPair,
         if (balance >= price * ORDER_AMOUNT) {
             return Optional.of(OrderData(OrderType.BUY, price, ORDER_AMOUNT))
         } else {
-            println("Not enough money")
+            logger.info("Not enough money")
             return Optional.empty()
         }
     }
@@ -91,7 +93,7 @@ class OrderMaker @Inject constructor(currencyPair: CurrencyPair,
         if (balance >= newPrice * amount) {
             return Optional.of(OrderData(OrderType.BUY, newPrice, amount))
         } else {
-            println("Not enough money")
+            logger.info("Not enough money")
             return Optional.empty()
         }
     }
@@ -100,7 +102,7 @@ class OrderMaker @Inject constructor(currencyPair: CurrencyPair,
         if (balance >= amount) {
             return Optional.of(OrderData(OrderType.SELL, price * (BigDecimal.ONE + PRICE_DELTA), amount))
         } else {
-            println("Not enough money")
+            logger.info("Not enough money")
             return Optional.empty()
         }
     }
@@ -112,11 +114,11 @@ class OrderMaker @Inject constructor(currencyPair: CurrencyPair,
         val order = activeOrders.first()
         val trade = trades.first()
         if (order.data.type == OrderType.BUY && (price - trade.data.price) / trade.data.price > PRICE_THRESHOLD) {
-            println("Price is going to get bigger (previous=${trade.data.price}, new=$price)")
+            logger.info("Price is going to get bigger (previous=${trade.data.price}, new=$price)")
             return Optional.of(order.id)
         }
         if (order.data.type == OrderType.SELL && (trade.data.price - price) / trade.data.price > PRICE_THRESHOLD) {
-            println("Price is going to get smaller (previous=${trade.data.price}, new=$price)")
+            logger.info("Price is going to get smaller (previous=${trade.data.price}, new=$price)")
             return Optional.of(order.id)
         }
         return Optional.empty()
