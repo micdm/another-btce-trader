@@ -5,7 +5,6 @@ import dagger.Module
 import dagger.Provides
 import micdm.btce_trader.*
 import micdm.btce_trader.model.Balance
-import java.math.BigDecimal
 import javax.inject.Singleton
 
 @Module(includes = arrayOf(ImplModule::class))
@@ -13,7 +12,7 @@ class LocalModule {
 
     @Singleton
     @Provides
-    internal fun provideBalance(): Balance = Balance(BigDecimal.ZERO, BigDecimal("400"))
+    internal fun provideBalance(localConfig: LocalConfig): Balance = localConfig.getInitialBalance()
 }
 
 @Module

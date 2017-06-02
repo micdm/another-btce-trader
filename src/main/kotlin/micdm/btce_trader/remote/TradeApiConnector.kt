@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.SingleEmitter
-import micdm.btce_trader.Config
 import micdm.btce_trader.model.*
 import micdm.btce_trader.model.Currency
 import okhttp3.FormBody
@@ -23,7 +22,7 @@ import javax.inject.Singleton
 import kotlin.collections.ArrayList
 
 @Singleton
-internal class TradeApiConnector @Inject constructor(private val config: Config,
+internal class TradeApiConnector @Inject constructor(private val remoteConfig: RemoteConfig,
                                                      private val okHttpClient: OkHttpClient,
                                                      private val dataSigner: DataSigner,
                                                      @Named("trade") private val gson: Gson,
@@ -121,8 +120,8 @@ internal class TradeApiConnector @Inject constructor(private val config: Config,
                             Request.Builder()
                                 .url("https://btc-e.nz/tapi")
                                 .post(body)
-                                .header("Key", config.getApiKey())
-                                .header("Sign", dataSigner.getSignature(formBodyToString(body), config.getApiSecret()))
+                                .header("Key", remoteConfig.getApiKey())
+                                .header("Sign", dataSigner.getSignature(formBodyToString(body), remoteConfig.getApiSecret()))
                                 .build()
                         )
                         .execute()

@@ -19,18 +19,16 @@ class CommonModule {
     @Singleton
     @Provides
     @Named("first")
-    fun provideFirstCurrency(): Currency = Currency.BTC
+    fun provideFirstCurrency(config: Config): Currency = Currency.valueOf(config.getFirstCurrency())
 
     @Singleton
     @Provides
     @Named("second")
-    fun provideSecondCurrency(): Currency = Currency.USD
+    fun provideSecondCurrency(config: Config): Currency = Currency.valueOf(config.getSecondCurrency())
 
     @Singleton
     @Provides
-    fun provideCurrencyPair(@Named("first") first: Currency, @Named("second") second: Currency): CurrencyPair {
-        return CurrencyPair(first, second, 3)
-    }
+    fun provideCurrencyPair(@Named("first") first: Currency, @Named("second") second: Currency, config: Config): CurrencyPair = CurrencyPair(first, second, config.getDecimalPlaces())
 
     @Provides
     @Singleton

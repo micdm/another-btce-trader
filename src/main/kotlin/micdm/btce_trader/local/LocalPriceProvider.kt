@@ -5,6 +5,7 @@ import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.PriceProvider
+import micdm.btce_trader.model.CurrencyPair
 import org.slf4j.Logger
 import java.io.File
 import java.math.BigDecimal
@@ -14,9 +15,10 @@ import javax.inject.Singleton
 
 @Singleton
 internal class LocalPriceProvider @Inject constructor(@Named("common") private val gson: Gson,
-                                                      private val logger: Logger): PriceProvider {
+                                                      private val logger: Logger,
+                                                      private val currencyPair: CurrencyPair): PriceProvider {
 
-    data class Pairs(val btc_usd: Pair)
+    class Pairs: HashMap<String, Pair>()
 
     data class Pair(val last: BigDecimal)
 
@@ -28,7 +30,7 @@ internal class LocalPriceProvider @Inject constructor(@Named("common") private v
         Observable
             .create<BigDecimal> { source ->
                 File("data/btce_prices2.log").forEachLine {
-                    source.onNext(gson.fromJson(it, Pairs::class.java).btc_usd.last)
+                    source.onNext(gson.fromJson(it, Pairs::class.java).get("${currencyPair.first.name.toLowerCase()}_${currencyPair.second.name.toLowerCase()}")!!.last)
                 }
                 source.onComplete()
             }

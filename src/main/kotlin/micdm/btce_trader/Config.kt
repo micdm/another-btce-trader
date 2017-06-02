@@ -7,23 +7,15 @@ import javax.inject.Singleton
 @Singleton
 class Config @Inject constructor() {
 
-    fun getApiKey(): String {
-        return System.getenv("API_KEY")
-    }
+    fun getFirstCurrency(): String = System.getenv("FIRST_CURRENCY")
 
-    fun getApiSecret(): String {
-        return System.getenv("API_SECRET")
-    }
+    fun getSecondCurrency(): String = System.getenv("SECOND_CURRENCY")
 
-    fun getPriceDelta(): BigDecimal {
-        return BigDecimal(System.getenv("PRICE_DELTA"))
-    }
+    fun getDecimalPlaces(): Int = System.getenv("DECIMAL_PLACES").toInt()
 
-    fun getPriceThreshold(): BigDecimal {
-        return BigDecimal(System.getenv("PRICE_THRESHOLD"))
-    }
+    fun getPriceDelta(): BigDecimal = BigDecimal(System.getenv("PRICE_DELTA"))
 
-    fun getOrderAmount(): BigDecimal {
-        return BigDecimal(System.getenv("ORDER_AMOUNT"))
-    }
+    fun getPriceThreshold(): BigDecimal = BigDecimal(System.getenv("PRICE_THRESHOLD"))
+
+    fun getOrderAmount(): BigDecimal = BigDecimal(System.getenv("ORDER_AMOUNT"))
 }

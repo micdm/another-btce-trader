@@ -15,8 +15,9 @@ internal class RemoteOrderHandler @Inject constructor(private val orderMaker: Or
 
     override fun start() {
         orderMaker.getCreateRequests()
+            .flatMap { Observable.fromIterable(it) }
             .doOnNext { logger.info("Creating order $it")}
-            .switchMap {
+            .flatMap {
                 tradeApiConnector.createOrder(it)
                     .toObservable()
                     .doOnError { logger.warn("Cannot create order: $it") }
@@ -25,8 +26,9 @@ internal class RemoteOrderHandler @Inject constructor(private val orderMaker: Or
             .doOnNext { logger.info("Order created") }
             .subscribe { orderStatusBuffer.created() }
         orderMaker.getCancelRequests()
+            .flatMap { Observable.fromIterable(it) }
             .doOnNext { logger.info("Cancelling order $it") }
-            .switchMap {
+            .flatMap {
                 tradeApiConnector.cancelOrder(it)
                     .toObservable()
                     .doOnError { logger.warn("Cannot cancel order: $it") }

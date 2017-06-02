@@ -1,8 +1,10 @@
 package micdm.btce_trader.local
 
+import io.reactivex.Observable
 import micdm.btce_trader.OrderHandler
 import micdm.btce_trader.OrderMaker
 import micdm.btce_trader.PriceProvider
+import micdm.btce_trader.TradeHistoryProvider
 import micdm.btce_trader.model.Order
 import micdm.btce_trader.model.OrderData
 import micdm.btce_trader.model.OrderType
@@ -22,6 +24,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                                                      private val orderMaker: OrderMaker,
                                                      private val priceProvider: PriceProvider,
                                                      private val tradeHistoryBuffer: TradeHistoryBuffer,
+                                                     private val tradeHistoryProvider: TradeHistoryProvider,
                                                      private val logger: Logger): OrderHandler {
 
 
@@ -31,6 +34,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
 
     override fun start() {
         orderMaker.getCreateRequests()
+            .flatMap { Observable.fromIterable(it) }
             .doOnNext { (type, price, amount) ->
                 if (type == OrderType.BUY) {
                     balanceBuffer.changeSecond((-price * amount).round(PRIZE_UP_ROUNDING))
@@ -39,13 +43,9 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                     balanceBuffer.changeFirst(-amount)
                 }
             }
-            .map {
-                Order(UUID.randomUUID().toString(), it)
-            }
-            .doOnNext {
-                activeOrdersBuffer.add(it)
-            }
-            .switchMap { (id, data) ->
+            .map { Order(UUID.randomUUID().toString(), it) }
+            .doOnNext { activeOrdersBuffer.add(it) }
+            .flatMap { (id, data) ->
                 priceProvider.getPrices()
                     .filter { price -> (data.type == OrderType.BUY && data.price >= price) || (data.type == OrderType.SELL && data.price <= price) }
                     .map { Trade(UUID.randomUUID().toString(), id, OrderData(data.type, data.price, (data.amount * PRIZE_PART).round(PRIZE_DOWN_ROUNDING)), ZonedDateTime.now()) }
@@ -60,10 +60,12 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                         }
                         tradeHistoryBuffer.add(trade)
                     }
+                    .takeUntil(orderMaker.getCancelRequests().filter { it.contains(id) })
                     .take(1)
             }
             .subscribe()
         orderMaker.getCancelRequests()
+            .flatMap { Observable.fromIterable(it) }
             .map { activeOrdersBuffer.getOrder(it) }
             .filter { it.isPresent() }
             .map { it.get() }
@@ -77,5 +79,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                 logger.info("Removing order $id: canceled")
                 activeOrdersBuffer.remove(id)
             }
+        tradeHistoryProvider.getTradeHistory()
+            .subscribe { logger.info("Trades are $it") }
     }
 }
