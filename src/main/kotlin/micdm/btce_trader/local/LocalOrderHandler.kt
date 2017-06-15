@@ -47,6 +47,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
             .doOnNext { activeOrdersBuffer.add(it) }
             .flatMap { (id, data) ->
                 priceProvider.getPrices()
+                    .map { it.value }
                     .filter { price -> (data.type == OrderType.BUY && data.price >= price) || (data.type == OrderType.SELL && data.price <= price) }
                     .map { Trade(UUID.randomUUID().toString(), id, OrderData(data.type, data.price, (data.amount * PRIZE_PART).round(PRIZE_DOWN_ROUNDING)), ZonedDateTime.now()) }
                     .doOnNext { trade ->
@@ -67,7 +68,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
         orderStrategy.getCancelRequests()
             .flatMap { Observable.fromIterable(it) }
             .map { activeOrdersBuffer.getOrder(it) }
-            .filter { it.isPresent() }
+            .filter { it.isPresent }
             .map { it.get() }
             .subscribe { (id, data) ->
                 if (data.type == OrderType.BUY) {

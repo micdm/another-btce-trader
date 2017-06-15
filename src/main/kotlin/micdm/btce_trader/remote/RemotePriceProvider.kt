@@ -5,8 +5,8 @@ import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.PriceProvider
 import micdm.btce_trader.misc.DummyWorker
+import micdm.btce_trader.model.Price
 import org.slf4j.Logger
-import java.math.BigDecimal
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -19,9 +19,9 @@ internal class RemotePriceProvider @Inject constructor(private val publicApiConn
 
     private val POLL_INTERVAL = Duration.ofSeconds(5)
 
-    private val prices: Subject<BigDecimal> = PublishSubject.create()
+    private val prices: Subject<Price> = PublishSubject.create()
 
-    override fun getPrices(): Observable<BigDecimal> = prices
+    override fun getPrices(): Observable<Price> = prices
 
     override fun start() {
         Observable

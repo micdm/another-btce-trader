@@ -18,7 +18,7 @@ internal class TradeHistoryBuffer @Inject constructor(private val logger: Logger
 
     fun add(trade: Trade) {
         logger.info("Adding trade $trade")
-        val trades = ArrayList(this.trades.getValue())
+        val trades = ArrayList(this.trades.value)
         trades.add(0, trade)
         this.trades.onNext(trades)
     }

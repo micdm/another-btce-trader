@@ -6,6 +6,7 @@ import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.PriceProvider
 import micdm.btce_trader.model.CurrencyPair
+import micdm.btce_trader.model.Price
 import org.slf4j.Logger
 import java.io.File
 import java.math.BigDecimal
@@ -25,18 +26,17 @@ internal class LocalPriceProvider @Inject constructor(@Named("common") private v
 
     data class Pair(val last: BigDecimal, val updated: Long)
 
-    data class Price(val amount: BigDecimal, val updated: ZonedDateTime)
+    private val prices: Subject<Price> = PublishSubject.create()
 
-    private val prices: Subject<BigDecimal> = PublishSubject.create()
-
-    override fun getPrices(): Observable<BigDecimal> = prices
+    override fun getPrices(): Observable<Price> = prices
 
     override fun start() {
         Observable
             .create<Price> { source ->
                 File("data/btce_prices.log").forEachLine {
                     try {
-                        val pair = gson.fromJson(it, Pairs::class.java).get("${currencyPair.first.name.toLowerCase()}_${currencyPair.second.name.toLowerCase()}")
+                        val pairs = gson.fromJson(it, Pairs::class.java)
+                        val pair = pairs["${currencyPair.first.name.toLowerCase()}_${currencyPair.second.name.toLowerCase()}"]
                         source.onNext(Price(pair!!.last, ZonedDateTime.ofInstant(Instant.ofEpochSecond(pair.updated), ZoneId.of("Europe/Moscow"))))
                     } catch (e: Exception) {
 
@@ -44,9 +44,8 @@ internal class LocalPriceProvider @Inject constructor(@Named("common") private v
                 }
                 source.onComplete()
             }
-            .distinctUntilChanged { it -> it.amount }
-            .doOnNext { logger.info("New price is ${it.amount} at ${it.updated}") }
-            .map { it.amount }
+            .distinctUntilChanged { (value) -> value }
+            .doOnNext { logger.info("New price is $it") }
             .subscribe(prices)
     }
 }

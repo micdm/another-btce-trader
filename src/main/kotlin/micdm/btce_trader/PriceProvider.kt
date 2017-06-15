@@ -1,10 +1,10 @@
 package micdm.btce_trader
 
 import io.reactivex.Observable
-import java.math.BigDecimal
+import micdm.btce_trader.model.Price
 
 interface PriceProvider {
 
-    fun getPrices(): Observable<BigDecimal>
     fun start()
+    fun getPrices(): Observable<Price>
 }

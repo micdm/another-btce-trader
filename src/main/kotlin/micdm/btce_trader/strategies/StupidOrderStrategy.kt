@@ -2,7 +2,7 @@ package micdm.btce_trader.strategies
 
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
-import io.reactivex.functions.Function4
+import io.reactivex.functions.Function3
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import micdm.btce_trader.*
@@ -21,7 +21,6 @@ class StupidOrderStrategy @Inject constructor(private val logger: Logger,
                                               private val activeOrdersProvider: ActiveOrdersProvider,
                                               private val balanceProvider: BalanceProvider,
                                               private val priceProvider: PriceProvider,
-                                              private val tradeHistoryProvider: TradeHistoryProvider,
                                               config: Config): OrderStrategy {
 
     private val PRICE_DELTA = config.getPriceDelta()
@@ -33,12 +32,12 @@ class StupidOrderStrategy @Inject constructor(private val logger: Logger,
 
     override fun start() {
         priceProvider.getPrices()
+            .map { it.value }
             .withLatestFrom(
                 activeOrdersProvider.getActiveOrders(),
-                tradeHistoryProvider.getTradeHistory(),
                 balanceProvider.getBalance(),
-                Function4<BigDecimal, Collection<Order>, Collection<Trade>, Balance, Collection<OrderData>> { price, activeOrders, trades, balance ->
-                    getDataToCreateOrders(price, activeOrders, trades, balance)
+                Function3<BigDecimal, Collection<Order>, Balance, Collection<OrderData>> { price, activeOrders, balance ->
+                    getDataToCreateOrders(price, activeOrders, balance)
                 }
             )
             .map { orders ->
@@ -47,6 +46,7 @@ class StupidOrderStrategy @Inject constructor(private val logger: Logger,
             }
             .subscribe(createRequests::onNext)
         priceProvider.getPrices()
+            .map { it.value }
             .withLatestFrom(
                 activeOrdersProvider.getActiveOrders(),
                 BiFunction<BigDecimal, Collection<Order>, Collection<String>> { price, activeOrders ->
@@ -56,7 +56,7 @@ class StupidOrderStrategy @Inject constructor(private val logger: Logger,
             .subscribe(cancelRequests::onNext)
     }
 
-    private fun getDataToCreateOrders(price: BigDecimal, activeOrders: Collection<Order>, trades: Collection<Trade>, balance: Balance): Collection<OrderData> {
+    private fun getDataToCreateOrders(price: BigDecimal, activeOrders: Collection<Order>, balance: Balance): Collection<OrderData> {
         if (activeOrders.size == 2) {
             return emptyList()
         }
@@ -64,14 +64,14 @@ class StupidOrderStrategy @Inject constructor(private val logger: Logger,
         if (activeOrders.find { it.data.type == OrderType.BUY } == null) {
             logger.info("Creating BUY order")
             val data = getDataToCreateBuyOrder(price, ORDER_AMOUNT, balance.second)
-            if (data.isPresent()) {
+            if (data.isPresent) {
                 datas.add(data.get())
             }
         }
         if (activeOrders.find { it.data.type == OrderType.SELL } == null) {
             logger.info("Creating SELL order")
             val data = getDataToCreateSellOrder(price, ORDER_AMOUNT, balance.first)
-            if (data.isPresent()) {
+            if (data.isPresent) {
                 datas.add(data.get())
             }
         }

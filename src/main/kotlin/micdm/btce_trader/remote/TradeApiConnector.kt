@@ -56,8 +56,8 @@ internal class TradeApiConnector @Inject constructor(private val remoteConfig: R
 
     fun getBalance(): Single<Balance> {
         return doRequest<Info>("getInfo", type=GetInfoResult::class.java).map {
-            Balance(it.funds.get(currencyToString(currencyPair.first))!!,
-                    it.funds.get(currencyToString(currencyPair.second))!!)
+            Balance(it.funds[currencyToString(currencyPair.first)]!!,
+                    it.funds[currencyToString(currencyPair.second)]!!)
         }
     }
 
@@ -127,9 +127,9 @@ internal class TradeApiConnector @Inject constructor(private val remoteConfig: R
                         .execute()
                     val text = response.body().string()
                     val result = gson.fromJson<Result<T1>>(text, type)
-                    if (result.error.isPresent()) {
+                    if (result.error.isPresent) {
                         source.onError(RuntimeException(result.error.get()))
-                    } else if (result.data.isPresent()) {
+                    } else if (result.data.isPresent) {
                         source.onSuccess(result.data.get())
                     } else {
                         source.onError(IllegalStateException("no data or error"))
@@ -154,9 +154,7 @@ internal class TradeApiConnector @Inject constructor(private val remoteConfig: R
 
     private fun formBodyToString(body: FormBody): String {
         val parts = ArrayList<String>()
-        for (i in 0 until body.size()) {
-            parts.add("${body.encodedName(i)}=${body.encodedValue(i)}")
-        }
+        (0 until body.size()).mapTo(parts) { "${body.encodedName(it)}=${body.encodedValue(it)}" }
         return parts.joinToString("&")
     }
 

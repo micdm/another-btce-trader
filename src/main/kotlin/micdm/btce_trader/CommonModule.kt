@@ -8,6 +8,7 @@ import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
 import micdm.btce_trader.model.Currency
 import micdm.btce_trader.model.CurrencyPair
+import micdm.btce_trader.strategies.LazyOrderStrategy
 import micdm.btce_trader.strategies.SlidingOrderStrategy
 import micdm.btce_trader.strategies.StupidOrderStrategy
 import org.slf4j.Logger
@@ -51,10 +52,12 @@ class CommonModule {
 
     @Provides
     @Singleton
-    fun provideOrderStrategy(config: Config, stupidOrderStrategy: StupidOrderStrategy, slidingOrderStrategy: SlidingOrderStrategy): OrderStrategy {
+    fun provideOrderStrategy(config: Config, stupidOrderStrategy: StupidOrderStrategy, slidingOrderStrategy: SlidingOrderStrategy,
+                             lazyOrderStrategy: LazyOrderStrategy): OrderStrategy {
         return when (config.getTradingStrategy()) {
             1 -> stupidOrderStrategy
             2 -> slidingOrderStrategy
+            3 -> lazyOrderStrategy
             else -> throw IllegalStateException("unkwnon trading strategy")
         }
     }
