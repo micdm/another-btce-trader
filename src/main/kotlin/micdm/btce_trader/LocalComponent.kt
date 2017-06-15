@@ -15,4 +15,5 @@ interface LocalComponent {
     fun getOrderMaker(): OrderMaker
     fun getPriceProvider(): PriceProvider
     fun getLogger(): Logger
+    fun getRunner(): Runner
 }

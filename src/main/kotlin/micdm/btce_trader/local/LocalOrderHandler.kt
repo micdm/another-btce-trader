@@ -79,7 +79,5 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                 logger.info("Removing order $id: canceled")
                 activeOrdersBuffer.remove(id)
             }
-        tradeHistoryProvider.getTradeHistory()
-            .subscribe { logger.info("Trades are $it") }
     }
 }

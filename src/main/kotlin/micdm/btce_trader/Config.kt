@@ -13,6 +13,10 @@ class Config @Inject constructor() {
 
     fun getDecimalPlaces(): Int = System.getenv("DECIMAL_PLACES").toInt()
 
+    fun getMinOrderAmount(): BigDecimal = BigDecimal(System.getenv("MIN_ORDER_AMOUNT"))
+
+    fun getTradingStrategy(): Int = System.getenv("TRADING_STRATEGY").toInt()
+
     fun getPriceDelta(): BigDecimal = BigDecimal(System.getenv("PRICE_DELTA"))
 
     fun getPriceThreshold(): BigDecimal = BigDecimal(System.getenv("PRICE_THRESHOLD"))

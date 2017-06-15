@@ -16,4 +16,5 @@ interface RemoteComponent {
     fun getPriceProvider(): PriceProvider
     fun getTradeHistoryProvider(): TradeHistoryProvider
     fun getLogger(): Logger
+    fun getRunner(): Runner
 }

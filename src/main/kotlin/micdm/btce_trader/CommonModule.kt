@@ -28,7 +28,8 @@ class CommonModule {
 
     @Singleton
     @Provides
-    fun provideCurrencyPair(@Named("first") first: Currency, @Named("second") second: Currency, config: Config): CurrencyPair = CurrencyPair(first, second, config.getDecimalPlaces())
+    fun provideCurrencyPair(@Named("first") first: Currency, @Named("second") second: Currency,
+                            config: Config): CurrencyPair = CurrencyPair(first, second, config.getDecimalPlaces(), config.getMinOrderAmount())
 
     @Provides
     @Singleton
@@ -44,5 +45,15 @@ class CommonModule {
     @Singleton
     fun provideLogger(): Logger {
         return LoggerFactory.getLogger("main")
+    }
+
+    @Provides
+    @Singleton
+    fun provideOrderMaker(config: Config, orderMaker1: OrderMaker1, orderMaker2: OrderMaker2): OrderMaker {
+        return when (config.getTradingStrategy()) {
+            1 -> orderMaker1
+            2 -> orderMaker2
+            else -> throw IllegalStateException("unkwnon trading strategy")
+        }
     }
 }

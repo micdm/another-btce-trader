@@ -9,6 +9,9 @@ import micdm.btce_trader.model.CurrencyPair
 import org.slf4j.Logger
 import java.io.File
 import java.math.BigDecimal
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -20,7 +23,9 @@ internal class LocalPriceProvider @Inject constructor(@Named("common") private v
 
     class Pairs: HashMap<String, Pair>()
 
-    data class Pair(val last: BigDecimal)
+    data class Pair(val last: BigDecimal, val updated: Long)
+
+    data class Price(val amount: BigDecimal, val updated: ZonedDateTime)
 
     private val prices: Subject<BigDecimal> = PublishSubject.create()
 
@@ -28,14 +33,20 @@ internal class LocalPriceProvider @Inject constructor(@Named("common") private v
 
     override fun start() {
         Observable
-            .create<BigDecimal> { source ->
-                File("data/btce_prices2.log").forEachLine {
-                    source.onNext(gson.fromJson(it, Pairs::class.java).get("${currencyPair.first.name.toLowerCase()}_${currencyPair.second.name.toLowerCase()}")!!.last)
+            .create<Price> { source ->
+                File("data/btce_prices.log").forEachLine {
+                    try {
+                        val pair = gson.fromJson(it, Pairs::class.java).get("${currencyPair.first.name.toLowerCase()}_${currencyPair.second.name.toLowerCase()}")
+                        source.onNext(Price(pair!!.last, ZonedDateTime.ofInstant(Instant.ofEpochSecond(pair.updated), ZoneId.of("Europe/Moscow"))))
+                    } catch (e: Exception) {
+
+                    }
                 }
                 source.onComplete()
             }
-            .distinctUntilChanged()
-            .doOnNext { logger.info("New price is $it") }
-            .subscribe(prices::onNext)
+            .distinctUntilChanged { it -> it.amount }
+            .doOnNext { logger.info("New price is ${it.amount} at ${it.updated}") }
+            .map { it.amount }
+            .subscribe(prices)
     }
 }
