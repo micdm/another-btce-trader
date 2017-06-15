@@ -12,7 +12,7 @@ interface RemoteComponent {
     fun getActiveOrdersProvider(): ActiveOrdersProvider
     fun getBalanceProvider(): BalanceProvider
     fun getOrderHandler(): OrderHandler
-    fun getOrderMaker(): OrderMaker
+    fun getOrderStrategy(): OrderStrategy
     fun getPriceProvider(): PriceProvider
     fun getTradeHistoryProvider(): TradeHistoryProvider
     fun getLogger(): Logger

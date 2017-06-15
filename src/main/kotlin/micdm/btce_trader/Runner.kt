@@ -21,7 +21,7 @@ class Runner @Inject constructor(private val logger: Logger,
                                  private val priceProvider: PriceProvider,
                                  private val orderHandler: OrderHandler,
                                  private val tradeHistoryProvider: TradeHistoryProvider,
-                                 private val orderMaker: OrderMaker) {
+                                 private val orderStrategy: OrderStrategy) {
 
     fun start() {
         logger.info("Trading options are: PAIR=$currencyPair, TRADING_STRATEGY=${config.getTradingStrategy()} PRICE_DELTA=${config.getPriceDelta()}, PRICE_THRESHOLD=${config.getPriceThreshold()}, ORDER_AMOUNT=${config.getOrderAmount()}")
@@ -55,7 +55,7 @@ class Runner @Inject constructor(private val logger: Logger,
             .withLatestFrom(tradeHistoryProvider.getTradeHistory(), BiFunction<BigDecimal, Collection<Trade>, Int> { _, trades -> trades.count() })
             .subscribe { logger.info("Final trade count is $it") }
         orderHandler.start()
-        orderMaker.start()
+        orderStrategy.start()
         priceProvider.start()
     }
 }

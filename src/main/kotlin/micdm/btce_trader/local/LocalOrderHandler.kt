@@ -2,7 +2,7 @@ package micdm.btce_trader.local
 
 import io.reactivex.Observable
 import micdm.btce_trader.OrderHandler
-import micdm.btce_trader.OrderMaker
+import micdm.btce_trader.OrderStrategy
 import micdm.btce_trader.PriceProvider
 import micdm.btce_trader.TradeHistoryProvider
 import micdm.btce_trader.model.Order
@@ -21,7 +21,7 @@ import javax.inject.Singleton
 @Singleton
 internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuffer: ActiveOrdersBuffer,
                                                      private val balanceBuffer: BalanceBuffer,
-                                                     private val orderMaker: OrderMaker,
+                                                     private val orderStrategy: OrderStrategy,
                                                      private val priceProvider: PriceProvider,
                                                      private val tradeHistoryBuffer: TradeHistoryBuffer,
                                                      private val tradeHistoryProvider: TradeHistoryProvider,
@@ -33,7 +33,7 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
     private val PRIZE_PART = BigDecimal("0.998")
 
     override fun start() {
-        orderMaker.getCreateRequests()
+        orderStrategy.getCreateRequests()
             .flatMap { Observable.fromIterable(it) }
             .doOnNext { (type, price, amount) ->
                 if (type == OrderType.BUY) {
@@ -60,11 +60,11 @@ internal class LocalOrderHandler @Inject constructor(private val activeOrdersBuf
                         }
                         tradeHistoryBuffer.add(trade)
                     }
-                    .takeUntil(orderMaker.getCancelRequests().filter { it.contains(id) })
+                    .takeUntil(orderStrategy.getCancelRequests().filter { it.contains(id) })
                     .take(1)
             }
             .subscribe()
-        orderMaker.getCancelRequests()
+        orderStrategy.getCancelRequests()
             .flatMap { Observable.fromIterable(it) }
             .map { activeOrdersBuffer.getOrder(it) }
             .filter { it.isPresent() }

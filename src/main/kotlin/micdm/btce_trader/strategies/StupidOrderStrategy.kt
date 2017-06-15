@@ -1,10 +1,11 @@
-package micdm.btce_trader
+package micdm.btce_trader.strategies
 
 import io.reactivex.Observable
 import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Function4
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
+import micdm.btce_trader.*
 import micdm.btce_trader.model.*
 import org.slf4j.Logger
 import java.math.BigDecimal
@@ -15,13 +16,13 @@ import javax.inject.Singleton
 import kotlin.collections.ArrayList
 
 @Singleton
-class OrderMaker1 @Inject constructor(private val logger: Logger,
-                                      private val currencyPair: CurrencyPair,
-                                      private val activeOrdersProvider: ActiveOrdersProvider,
-                                      private val balanceProvider: BalanceProvider,
-                                      private val priceProvider: PriceProvider,
-                                      private val tradeHistoryProvider: TradeHistoryProvider,
-                                      config: Config): OrderMaker {
+class StupidOrderStrategy @Inject constructor(private val logger: Logger,
+                                              private val currencyPair: CurrencyPair,
+                                              private val activeOrdersProvider: ActiveOrdersProvider,
+                                              private val balanceProvider: BalanceProvider,
+                                              private val priceProvider: PriceProvider,
+                                              private val tradeHistoryProvider: TradeHistoryProvider,
+                                              config: Config): OrderStrategy {
 
     private val PRICE_DELTA = config.getPriceDelta()
     private val PRICE_THRESHOLD = config.getPriceThreshold()

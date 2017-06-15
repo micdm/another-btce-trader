@@ -2,19 +2,19 @@ package micdm.btce_trader.remote
 
 import io.reactivex.Observable
 import micdm.btce_trader.OrderHandler
-import micdm.btce_trader.OrderMaker
+import micdm.btce_trader.OrderStrategy
 import org.slf4j.Logger
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-internal class RemoteOrderHandler @Inject constructor(private val orderMaker: OrderMaker,
+internal class RemoteOrderHandler @Inject constructor(private val orderStrategy: OrderStrategy,
                                                       private val tradeApiConnector: TradeApiConnector,
                                                       private val orderStatusBuffer: OrderStatusBuffer,
                                                       private val logger: Logger): OrderHandler {
 
     override fun start() {
-        orderMaker.getCreateRequests()
+        orderStrategy.getCreateRequests()
             .flatMap { Observable.fromIterable(it) }
             .doOnNext { logger.info("Creating order $it")}
             .flatMap {
@@ -25,7 +25,7 @@ internal class RemoteOrderHandler @Inject constructor(private val orderMaker: Or
             }
             .doOnNext { logger.info("Order created") }
             .subscribe { orderStatusBuffer.created() }
-        orderMaker.getCancelRequests()
+        orderStrategy.getCancelRequests()
             .flatMap { Observable.fromIterable(it) }
             .doOnNext { logger.info("Cancelling order $it") }
             .flatMap {

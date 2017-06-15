@@ -12,7 +12,7 @@ interface LocalComponent {
     fun getActiveOrdersProvider(): ActiveOrdersProvider
     fun getBalanceProvider(): BalanceProvider
     fun getOrderHandler(): OrderHandler
-    fun getOrderMaker(): OrderMaker
+    fun getOrderStrategy(): OrderStrategy
     fun getPriceProvider(): PriceProvider
     fun getLogger(): Logger
     fun getRunner(): Runner
